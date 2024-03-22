@@ -28,7 +28,7 @@ def send(client_socket):
         message = input(f"{runtime} - Enter a message to send to the server: ")
         client_socket.send(message.encode('utf-8'))
 
-server_address = ('10.200.236.224', 5555)
+server_address = ('10.200.236.220', 5555)
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(server_address)

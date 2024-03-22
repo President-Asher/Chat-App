@@ -2,6 +2,7 @@ import socket
 import threading
 import tkinter as tk
 from tkinter import simpledialog  # Import simpledialog for getting user input
+import os
 
 MAX_MESSAGES = None  # No maximum number of messages in the chat log
 
@@ -18,7 +19,7 @@ def receive(client_socket, chat_log, client_name):
         if data.startswith("Client:"):
             chat_log.insert(tk.END, f"{client_name}: {data.split(': ', 1)[1]}\n", 'client_tag')
         else:
-            chat_log.insert(tk.END, f"Server: {data}\n", 'server_tag')
+            chat_log.insert(tk.END, f"{data}\n", 'server_tag')
         chat_log.config(state=tk.DISABLED)
         chat_log.yview(tk.END)  # Auto-scroll to the end
 
@@ -35,6 +36,9 @@ def send(event, client_socket, entry_widget, chat_log, client_name):
         entry_widget.delete(0, tk.END)
 
 def start_gui(client_socket, client_name):
+    def start_call():
+        os.system("python camera_copy.py")
+
     root = tk.Tk()
     root.title("Chat Client")
 
@@ -57,6 +61,9 @@ def start_gui(client_socket, client_name):
     send_button = tk.Button(root, text="Send", command=lambda: send(None, client_socket, entry_widget, chat_log, client_name))
     send_button.pack()
 
+    start_call_button = tk.Button(root, text="Start Call", command=start_call)
+    start_call_button.pack()
+
     receive_thread = threading.Thread(target=receive, args=(client_socket, chat_log, client_name))
     receive_thread.start()
 
@@ -73,7 +80,7 @@ def main():
 
     # Continue with the chat only if the client entered a name
     if client_name:
-        server_address = ('10.200.236.224', 5555)
+        server_address = ('10.200.236.221', 8888)
 
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(server_address)

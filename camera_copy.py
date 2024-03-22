@@ -5,7 +5,7 @@ import struct
 
 # Create a socket connection to the server
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect(('10.200.236.221', 8888))
+client_socket.connect(('10.200.236.221', 8080))
 
 # Start capturing from the client's webcam
 cap = cv2.VideoCapture(0)

@@ -81,7 +81,7 @@ def main():
 
     # Continue with the chat only if the client entered a name
     if client_name:
-        server_address = ('10.200.236.221', 5555)
+        server_address = ('10.200.236.220', 5555)
 
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(server_address)

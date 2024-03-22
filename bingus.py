@@ -1,20 +1,19 @@
+import sys
 import socket
-import threading
-from io import BytesIO
-from tkinter import simpledialog
-from PIL import Image
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QLineEdit, QPushButton, QLabel, QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QLineEdit, QPushButton, QLabel, QFileDialog, QMessageBox, QInputDialog
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt
-
-MAX_MESSAGES = None  # No maximum number of messages in the chat log
+from PIL import Image
+from io import BytesIO
+from cryptography.fernet import Fernet
+import base64
 
 class ChatClientUI(QWidget):
-    def __init__(self, client_socket, client_name):
+    def __init__(self, client_socket, client_name, password):
         super().__init__()
 
         self.client_socket = client_socket
         self.client_name = client_name
+        self.password = password
 
         self.init_ui()
 
@@ -50,8 +49,8 @@ class ChatClientUI(QWidget):
         message = self.entry_widget.text()
         if message:
             full_message = f"{self.client_name}: {message}"
-            self.client_socket.send(full_message.encode('utf-8'))
-            self.display_message(full_message)
+            encrypted_message = cipher_suite.encrypt(full_message.encode('utf-8'))
+            self.client_socket.send(encrypted_message)
             self.entry_widget.clear()
 
     def send_image(self):
@@ -60,20 +59,21 @@ class ChatClientUI(QWidget):
         if image_path:
             with open(image_path, 'rb') as image_file:
                 image_data = image_file.read()
-                self.client_socket.sendall(image_data)
-                self.display_image(image_data)
+                encrypted_image_data = cipher_suite.encrypt(image_data)
+                self.client_socket.sendall(encrypted_image_data)
 
     def receive_messages(self):
         while True:
             try:
-                data = self.client_socket.recv(1024).decode('utf-8')
+                data = self.client_socket.recv(1024)
                 if not data:
                     break
-                if data.startswith("Image:"):
+                decrypted_data = cipher_suite.decrypt(data).decode('utf-8')
+                if decrypted_data.startswith("Image:"):
                     image_data = self.client_socket.recv(1024)
                     self.display_image(image_data)
                 else:
-                    self.display_message(data)
+                    self.display_message(decrypted_data)
             except Exception as e:
                 print(f"Error receiving message: {e}")
                 break
@@ -100,20 +100,23 @@ class ChatClientUI(QWidget):
 def main():
     # Get client's name using simpledialog
     app = QApplication([])
-    client_name = simpledialog.askstring("Client Name", "Enter your name:")
+    client_name = QInputDialog.getText(None, "Client Name", "Enter your name:")[0]
 
     # Continue with the chat only if the client entered a name
     if client_name:
-        server_address = ('10.200.236.221', 8080)
+        password = QInputDialog.getText(None, "Password", "Enter the server password:")[0]
+
+        server_address = ('127.0.0.1', 5555)
 
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(server_address)
 
-        # Send client's name to the server
+        # Send client's name and password to the server
         client.send(client_name.encode('utf-8'))
+        client.send(password.encode('utf-8'))
 
         # Start the GUI
-        chat_ui = ChatClientUI(client, client_name)
+        chat_ui = ChatClientUI(client, client_name, password)
 
         app.exec_()
         client.close()

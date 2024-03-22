@@ -45,7 +45,7 @@ class ClientGUI(QMainWindow):
         self.central_widget.setLayout(self.layout)
 
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client_socket.connect(('10.200.236.224', 5555))
+        self.client_socket.connect(('10.200.236.220', 5555))
 
         self.receive_thread = threading.Thread(target=self.receive_messages)
         self.receive_thread.start()
